@@ -94,8 +94,25 @@ public class DnsProxy {
         try {
             socket = new DatagramSocket(null);
             socket.setReuseAddress(true);
-            socket.bind(new InetSocketAddress(bindAddress, port));
+            try {
+                socket.bind(new InetSocketAddress(bindAddress, port));
+            } catch (Exception e) {
+                Log.w(TAG, "Port " + port + " on " + bindAddress + " failed: " + e.getMessage());
+                ngo.xnet.vpn.util.RemoteLog.log(TAG, "Port " + port + " bind failed: " + e.getMessage());
+                try {
+                    socket.close();
+                    socket = new DatagramSocket(null);
+                    socket.setReuseAddress(true);
+                    socket.bind(new InetSocketAddress(bindAddress, FALLBACK_PORT));
+                    port = FALLBACK_PORT;
+                } catch (Exception e2) {
+                    Log.e(TAG, "Fallback port also failed: " + e2.getMessage());
+                    ngo.xnet.vpn.util.RemoteLog.log(TAG, "Fallback " + FALLBACK_PORT + " also failed: " + e2.getMessage());
+                    return;
+                }
+            }
             Log.i(TAG, "Listening on " + bindAddress.getHostAddress() + ":" + port);
+            ngo.xnet.vpn.util.RemoteLog.log(TAG, "DNS listening on " + bindAddress.getHostAddress() + ":" + port);
 
             byte[] buf = new byte[MAX_PACKET];
             while (running) {
@@ -141,22 +158,11 @@ public class DnsProxy {
         }
     }
 
-    /** Forward DNS query via plain UDP to upstream DNS server. */
+    /** Forward DNS query via plain UDP to upstream DNS server through ZT. */
     private byte[] resolveUdp(byte[] query) throws Exception {
-        DatagramSocket ds = new DatagramSocket();
-        try {
-            ds.setSoTimeout(5000);
-            DatagramPacket req = new DatagramPacket(query, query.length, upstreamDns, upstreamDnsPort);
-            ds.send(req);
-            byte[] buf = new byte[512];
-            DatagramPacket resp = new DatagramPacket(buf, buf.length);
-            ds.receive(resp);
-            byte[] result = new byte[resp.getLength()];
-            System.arraycopy(resp.getData(), 0, result, 0, resp.getLength());
-            return result;
-        } finally {
-            ds.close();
-        }
+        // VPN process can't route to ZT IPs via sockets (UID excluded).
+        // Use DoH as fallback with a protected socket to reach public internet.
+        return resolveDoH(query);
     }
 
     private byte[] resolveDoH(byte[] query) throws Exception {

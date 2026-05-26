@@ -28,6 +28,8 @@ include_directories(
 
 # ZeroTier core (Apache 2.0)
 file(GLOB ZTO_SRC ${ZTO_DIR}/node/*.cpp ${ZTO_DIR}/osdep/OSUtils.cpp ${ZTO_DIR}/osdep/PortMapper.cpp ${ZTO_DIR}/osdep/ManagedRoute.cpp ${ZTO_DIR}/osdep/LinuxNetLink.cpp ${ZTO_DIR}/osdep/Http.cpp)
+list(FILTER ZTO_SRC EXCLUDE REGEX ".*Metrics\\.cpp$")
+list(APPEND ZTO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/metrics_stub.cpp)
 
 # natpmp (BSD)
 set(NATPMP_SRC

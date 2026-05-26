@@ -26,8 +26,8 @@ android {
         applicationId "ngo.xnet.vpn"
         minSdk 24
         targetSdk 34
-        versionCode 253
-        versionName "2.5.3"
+        versionCode 254
+        versionName "2.5.4"
         multiDexEnabled true
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
@@ -67,6 +67,12 @@ android {
         all {
             exclude module: 'httpclient'
             exclude module: 'commons-logging'
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "xnet-vpn-${variant.versionName}-${variant.versionCode}-${variant.buildType.name}.apk"
         }
     }
 }

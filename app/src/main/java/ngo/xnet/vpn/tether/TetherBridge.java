@@ -61,6 +61,7 @@ public class TetherBridge implements TetherDetector.Listener, UpstreamSelector.L
     public void setVpnService(VpnService vpnService) {
         this.vpnService = vpnService;
     }
+    public VpnService getVpnService() { return vpnService; }
 
     public void setSocketMode(SocketMode mode) {
         this.socketMode = mode;
